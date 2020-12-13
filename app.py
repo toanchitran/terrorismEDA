@@ -7,7 +7,7 @@ data_path =  os.path.join(os.getcwd(), "data")
 app = MultiApp()
 
 # Add all your application here
-app.add_app("Home", home.app)
+app.add_app("Home", home.home)
 # app.add_app("Country", country.app)
 app.add_app("Country", country.app)
 # app.add_app("Region", region.app)
