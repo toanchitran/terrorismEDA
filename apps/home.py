@@ -582,10 +582,10 @@ def home():
     ax.legend(['Ransom amount demanded', 'Ransom amount paid'], fontsize=12)
     st.pyplot(fig)
     st.markdown('Typically, most ransom demands are below USD $75,000. <br> However, the amount actually paid to the abductees is typically lower and less frequent.')
-    st.markdown('Does paying less than the requested amount of ransom decrease the chances of a successful release (no hostages killed)?')
+    st.markdown('**Does paying less than the requested amount of ransom decrease the chances of a successful release (no hostages killed)?**')
     ransom_paid_USD_df['hostage_killed_num'] = ransom_paid_USD_df['hostage_num'] - ransom_paid_USD_df['hostage_survived_num']
     ransom_paid_USD_df['hostage_killed'] = ransom_paid_USD_df['hostage_killed_num'].apply(lambda x: 'One or more fatality' if x > 0 else 'No fatalities')
-    st.dataframe(ransom_paid_USD_df)
+    # st.dataframe(ransom_paid_USD_df)
     st.markdown('In cases where ransom was demanded and paid, most demands were met.')
     st.markdown('A handful of cases paid under the requested amount, and one case paid more.')
     st.markdown("There doesn't seem to be a correlation between meeting the reqested amount and a successful outcome: hostages died when demands were met, and when they weren't. ")
@@ -612,11 +612,11 @@ def home():
     hostages_killed_per_incident_ransom_not_paid_a = ((len(ransom_not_paid[ransom_not_paid['hostage_killed_num'] > 0])) * 100)/len(hostage_incident_df)
     hostages_killed_per_incident_ransom_not_paid_b = ((len(ransom_not_paid[ransom_not_paid['hostage_killed_num'] > 0])) * 100)/len(ransom_not_paid)
     st.markdown('There are ***'+'%2.2f'%hostages_killed_per_incident_ransom_not_paid_a+' %*** of the hostages in the total taken hostage incidents were killed even they paid the ransom.')
-    st.markdown('And there are ***' + '%2.2f'%hostages_killed_per_incident_ransom_not_paid_b +'%*** of hostages that paid ransom were killed (The percentage is calculated as the killed and paid ransom hostages over the total of paid ransom hostages')
+    st.markdown('And there are ***' + '%2.2f'%hostages_killed_per_incident_ransom_not_paid_b +'%*** of hostages that were killed in all of paid ransom incidents')
     hostages_killed_per_incident_ransom_paid_a = ((len(ransom_paid_USD_df[ransom_paid_USD_df['hostage_killed_num'] > 0])) * 100)/len(hostage_incident_df)
     hostages_killed_per_incident_ransom_paid_b = ((len(ransom_paid_USD_df[ransom_paid_USD_df['hostage_killed_num'] > 0])) * 100)/len(ransom_paid_USD_df)
     st.markdown('However, there are only ***'+'%2.2f'%hostages_killed_per_incident_ransom_paid_a+'%*** of hostages in total of hostage taken incidents were killed when they ***DID NOT*** pay the ransom.')
-    st.markdown('And, there are only ***'+'%2.2f'%hostages_killed_per_incident_ransom_paid_b+'%*** of hostages were killed in total of not-paid-ransom incidents')
+    st.markdown('And, there are only ***'+'%2.2f'%hostages_killed_per_incident_ransom_paid_b+'%*** of hostages that were killed in all of not-paid-ransom incidents')
     st.markdown('THINK TWICE BEFORE DECIDING PAY RANSOM BECAUSE YOU WILL GET HIGHER CHANGE TO SURVIVED WHEN NOT PAID RANSOM')
 
 
