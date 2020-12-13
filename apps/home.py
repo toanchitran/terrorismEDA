@@ -581,7 +581,8 @@ def home():
     ax.set_ylabel('Frequency')
     ax.legend(['Ransom amount demanded', 'Ransom amount paid'], fontsize=12)
     st.pyplot(fig)
-    st.markdown('Typically, most ransom demands are below USD $75,000. <br> However, the amount actually paid to the abductees is typically lower and less frequent.')
+    st.markdown('Typically, most ransom demands are below USD $75,000.')
+    st.markdown('However, the amount actually paid to the abductees is typically lower and less frequent.')
     st.markdown('**Does paying less than the requested amount of ransom decrease the chances of a successful release (no hostages killed)?**')
     ransom_paid_USD_df['hostage_killed_num'] = ransom_paid_USD_df['hostage_num'] - ransom_paid_USD_df['hostage_survived_num']
     ransom_paid_USD_df['hostage_killed'] = ransom_paid_USD_df['hostage_killed_num'].apply(lambda x: 'One or more fatality' if x > 0 else 'No fatalities')
