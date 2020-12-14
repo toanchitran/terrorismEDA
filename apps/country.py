@@ -252,8 +252,11 @@ def app():
         a4 = attack_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5)['fatality_num'][0] 
         b3 = attack_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5).index[0]
         b4 = attack_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5)['wounded_num'][0]
+        c5 = attack_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5).index[0]
+        c6 = attack_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5)['total_human_loss'][0]
         st.markdown('***'+a3 + '*** is the top 1 terrorism type killer. They killed total of ***' + a4.astype(str) + '*** people since ' + which_year)
-        st.markdown('***'+b3 + '*** is the top 1 terrorism injuring, dangerous terrorism attacker. They injured total of ***' + b4.astype(str) + '*** people since ' + which_year) 
+        st.markdown('***'+b3 + '*** is the top 1 terrorism injuring, dangerous terrorism attacker. They injured total of ***' + b4.astype(str) + '*** people since ' + which_year)
+        st.markdown('***'+c5 + '*** is the top 1 terrorism attacker for human loss. They injured and killed total of ***' + c6.astype(str)  + '*** people since ' + which_year) 
         st.dataframe(attacker_and_dead_people)
         
         if st.checkbox('Show chart', key='attack_type_and_dead_wounded1'):
@@ -269,8 +272,11 @@ def app():
         a4 = attack_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5)['fatality_num'][0] 
         b3 = attack_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5).index[0]
         b4 = attack_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5)['wounded_num'][0]
+        c5 = attack_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5).index[0]
+        c6 = attack_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5)['total_human_loss'][0]
         st.markdown('***'+a3 + '*** is the top 1 terrorism type killer. They killed total of ***' + a4.astype(str) + '*** people since 2000')
         st.markdown('***'+b3 + '*** is the top 1 terrorism injuring, dangerous terrorism attacker. They injured total of ***' + b4.astype(str)  + '*** people since 2000') 
+        st.markdown('***'+c5 + '*** is the top 1 terrorism attacker for human loss. They injured and killed total of ***' + c6.astype(str)  + '*** people since 2000') 
         st.dataframe(attacker_and_dead_people)
         if st.checkbox('Show chart', key='attack_type_and_dead_wounded2'):
             fig,ax = plt.subplots()

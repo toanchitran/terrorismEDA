@@ -26,7 +26,8 @@ streamlit run app.py
 ## STRUCTURE OF PROJECT
 1. Main app: **app.py**
 2. In app folder:
-    * **home.py** for the Home page
+    * **home.py** for the Human loss and property loss page
+    * **hostage.py** for Hostage and ransom page
     * **country.py** for the Country report
     * **region.py** for the Region report
 
