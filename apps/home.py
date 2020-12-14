@@ -8,7 +8,7 @@ from data.import_data import load_terrorism_data
 import seaborn as sns
 
 
-def home():
+def app():
     st.title("TERRORISM RISK ACCESSMENT FOR BUSINESS")
     
     # Create a text element and let the reader know the data is loading.
@@ -25,6 +25,9 @@ def home():
     st.markdown('COUNTRIES AND REGIONS BELOW ARE NOT INCLUDED IN THIS ACCESSMENT SUMMARY REPORT. PLEASE REFER IT IN THE PAGE "REGION" AND "COUNTRY" IF NEEDED.')
     st.dataframe(notRegion_df)
     working_data = terrorism_df[~terrorism_df['region'].isin(notRegion)]
+    if st.checkbox('Include of the regions and countries to the report:', key='all_data'):
+        terrorism_df = load_terrorism_data()
+        working_data = terrorism_df
     if st.checkbox('Show working data sample:', key='check_box1'):
         st.write('Data')
         st.dataframe(working_data.sample(10))
@@ -388,7 +391,8 @@ def home():
 
 
     st.markdown('**PROPERTY DAMAGED IN USD CAUSED BY TOP 3 ATTACK TYPES**')
-    
+    st.markdown('The type of attack that casue most of property damage in USD is vary from regions.')
+    st.markdown('The table below will show more detail on with type of attack that cause most damage and how much the damage is')
     st.dataframe(property_damage_stt1)
     
     st.markdown('**PROPERTY DAMAGED BY ATTACK TYPE BY COUNTRY SINCE 2000**')
@@ -400,12 +404,19 @@ def home():
                     projection="natural earth",
                     color='property_damage_USD',
                     color_continuous_scale =  px.colors.diverging.balance,
-                    color_continuous_midpoint=property_damage_stt3['property_damage_USD'].mean())
+                    color_continuous_midpoint=property_damage_stt3_top1_attack['property_damage_USD'].mean())
     fig.update_layout(
         title= "MOST PROPERTY DAMAGED ATTACK TYPE BY COUNTRY SINCE 2000",
         title_x = 0.5,
         showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
+    property_damage_stt6 = property_damage.groupby(['year', 'country'])['property_damage_USD'].sum().sort_values(ascending=False).reset_index()
+    st.dataframe(property_damage_stt6[property_damage_stt6['property_damage_USD'] > 0])
+    fig, ax = plt.subplots()
+    st.markdown('In 1 year, countries could lost to ***100M USD*** due to property damage attack. However, typically, in 1 year, 1 country could loss arround ***70,000 USD*** due to terrorism attack')
+    n, bins, pathches = plt.hist(property_damage_stt6[property_damage_stt6['property_damage_USD'] > 2000]['property_damage_USD'])
+    plt.xticks(bins)
+    st.pyplot(fig)
 
     st.markdown('The table below give you the information of the highest property damage in USD in country and the terrorism attack type that make those damage.')
 
@@ -424,201 +435,9 @@ def home():
         st.dataframe(property_damage_stt5)
 
     st.markdown('The countries in the table below are safe from the property damaged by terrorism since 2000 to 2017')
-    st.dataframe(property_damage_stt3[property_damage_stt3['property_damage_USD'] == 0][['country', 'property_damage_USD']])
-
-    #Hostage incident
-
-    # PREPARE DATA
-    hostage_incident_df = terrorism_df[(terrorism_df['hostage'] == 1) | (terrorism_df['attack_type'] == 4) | (terrorism_df['attack_type'] == 5) | (terrorism_df['attack_type'] == 6)].reset_index()
-    hostage_incidents = len(hostage_incident_df)
-    non_hostage_incidents = len(terrorism_df) - hostage_incidents
-    a = (hostage_incidents * 100)/ (len(terrorism_df))
-
-    hostage_incidents_ransom = (hostage_incident_df['ransom_demand'] == 1).sum()
-    hostage_incidents_non_ransom = hostage_incidents - hostage_incidents_ransom
-    b =  (hostage_incidents_ransom * 100)/hostage_incidents
-
-    ransom_paid = (hostage_incident_df['ransom_paid'] > 0).sum()
-    no_ransom_paid = hostage_incidents_ransom - ransom_paid
-    c = (ransom_paid * 100)/hostage_incidents_ransom
-
-    # DISPLAY DATA
-    st.markdown('## HOSTAGE INCIDENT')
-
-    st.markdown('**Hostage incidents compared to all incidents**')
-    st.markdown('Since 1970, there are total ***'+ str(hostage_incidents) +'***, compared to ***'+ str(non_hostage_incidents)+'*** in total of ***'+str(len(terrorism_df))+'*** terrorism attacks since 1970.'+
-    'Within hostage taking incidents, there are ***'+str(hostage_incidents_ransom)+'*** incidents that required ransom. And only ***'+str(ransom_paid)+'*** incidents, required ransom were paid '
-    )
-    st.markdown('In other word, ***'+'%.2f'%a+'%*** of all terrorism incidents take hostages. And ***'+ '%.2f'%b +'%*** of hostage taking incident required ransom. But only ***'+'%.2f'%c+'%*** of them were paid.')
-
-    group1 = [non_hostage_incidents, hostage_incidents]
-    group2 = [non_hostage_incidents, hostage_incidents_non_ransom, hostage_incidents_ransom]
+    st.dataframe(property_damage_stt3_top1_attack[property_damage_stt3_top1_attack['property_damage_USD'] == 0][['country', 'property_damage_USD']].drop_duplicates())
 
 
-    fig, ax = plt.subplots(figsize=(10, 10))
-    size = 0.35
-
-    cmap = plt.get_cmap("tab20c")
-    outer_colors = cmap(np.arange(2)*5)
-    inner_colors = cmap([3, 7, 4])
-
-    ax.pie(group1, radius=1, colors=outer_colors,
-        wedgeprops=dict(width=size, edgecolor='w'))
-
-    ax.pie(group2, radius=1-size, colors=inner_colors,
-        wedgeprops=dict(width=size, edgecolor='w'), labeldistance=1.5)
-
-
-    ax.annotate( 'no hostage taken', (-0.2, 0.8))
-    ax.annotate( 'hostage(s) \n taken', (0.7, -0.25))
-    ax.annotate( 'ransom\n demand', (0.35, 0.03))
-    ax.annotate( 'no ransom \n demand', (0.35, -0.15))
-
-    ax.set_title('Proportion of attacks involving hostages', fontsize=15)
-    st.pyplot(fig)
-
-    st.markdown('**Which countries take the most hostages?**')
-    # top countries where hostage incidents take place
-    top_hostage_takers_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] == 4) & (hostage_incident_df['year'] > 2007)].groupby('country')['eventid'].count().sort_values(ascending=False).head(20)
-    top_hostage_takers_non_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] != 4) & (hostage_incident_df['year'] > 2007)].groupby('country')['eventid'].count().sort_values(ascending=False).head(20)
-    top_hostage_takers = pd.merge(top_hostage_takers_non_fatality, top_hostage_takers_fatality, on='country').reset_index().head(10)
-    top_hostage_takers = top_hostage_takers.rename(columns={'eventid_x':'total_non_fatal','eventid_y':'total_fatal'})
-    fig, ax = plt.subplots(figsize=(12,9))
-    top_hostage_takers.plot.bar(x='country', stacked=True, ax=ax)
-    ax.set(xlabel='Country', ylabel='Total hostage incidents')
-    ax.set_title('Total attacks involving hostages by country (2007 - 2017)', fontsize=15)
-    ax.legend(['No fatalities', 'One or more fatalities'], fontsize=12)
-    st.pyplot(fig)
-
-    st.markdown("The chances of survival in the countries that take the most captives during terrorist incidents very much depends on which country you are taken in. However, these charts don't tell us much about which types of hostage are targeted by the groups. Are you more likely to be taken as a local or foreigner?")
-
-    st.markdown('**What are your real chances of being taken hostage as a foreigner?**')
-    # add here countries with highest proportion of foreigners, stacked with ransom/non-ransom
-    hostage_incident_foreigner_df = hostage_incident_df[(hostage_incident_df['target_nationality'] != hostage_incident_df['country']) & (hostage_incident_df['year'] > 2007)].reset_index(drop=True)
-    # pie chart of hostage incidents, foreign vs local target
-    local_vs_foreign_target = [(len(hostage_incident_df) - len(hostage_incident_foreigner_df)), len(hostage_incident_foreigner_df)]
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.pie(local_vs_foreign_target, labels=['Local target', 'Foreign target'], autopct='%1.1f%%')
-    ax.set_title("Hostage incidents: local vs foreign targets", fontsize=15)
-    st.pyplot(fig)
-    # top 10 countries where you are more likely to be taken hostage as a foreigner
-    hostage_incident_foreigner_top_10 = hostage_incident_foreigner_df.groupby('country')['eventid'].count().sort_values(ascending=False).head(10).index
-    hostage_incident_foreigner_df_top_10 = hostage_incident_foreigner_df[hostage_incident_foreigner_df['country'].isin(hostage_incident_foreigner_top_10)].reset_index(drop=True)
-    hostage_incident_foreigner_df_top_10 = hostage_incident_foreigner_df_top_10[hostage_incident_foreigner_df_top_10['ransom_demand'] >= 0]
-    fig, ax = plt.subplots(figsize=(15, 8))
-    sns.countplot(y = 'country', 
-                hue = 'ransom_demand', 
-                data = hostage_incident_foreigner_df_top_10)
-    ax.set_title("Top Countries with Hostage Incidents Targeting Foreigners", fontsize=15)
-    ax.legend(['No ransom demanded', 'Ransom demanded'])
-    st.pyplot(fig)
-    st.markdown("One country stands out: Philippines. Though the total number of foreign hostage events is not the highest, if you are kidnapped in Philippines there is a 50% chance of ransom demand.")
-    focus = ['Syria', 'Philippines', 'Libya']
-    hostage_incident_foreigner_ransom_df = hostage_incident_foreigner_df[hostage_incident_foreigner_df['country'].isin(focus)].reset_index(drop=True)
-    hostage_incident_foreigner_ransom_df = hostage_incident_foreigner_ransom_df[(hostage_incident_foreigner_ransom_df['hostage_survived_num'] != -99) & (hostage_incident_foreigner_ransom_df['hostage_num'] != -99) & (hostage_incident_foreigner_ransom_df['ransom_paid'] != -99) & (hostage_incident_foreigner_ransom_df['ransom_demand_USD'] != -99)]
-    hostage_incident_foreigner_ransom_df['hostage_fatalities'] = hostage_incident_foreigner_ransom_df['hostage_num'] - hostage_incident_foreigner_ransom_df['hostage_survived_num']
-    # we can only do a 
-    philippines_df = hostage_incident_foreigner_ransom_df[hostage_incident_foreigner_ransom_df['country'] == 'Philippines'].reset_index(drop=True)
-    philippines_corr_df = philippines_df[['ransom_demand_USD', 'hostage_fatalities', 'hostage_num']]
-    philippines_corr = philippines_corr_df.corr()
-
-    syria_df = hostage_incident_foreigner_ransom_df[hostage_incident_foreigner_ransom_df['country'] == 'Syria'].reset_index(drop=True)
-    syria_df = syria_df[['ransom_demand_USD', 'hostage_num', 'hostage_fatalities']]
-    syria_corr = syria_df.corr()
-
-    libya_df = hostage_incident_foreigner_ransom_df[hostage_incident_foreigner_ransom_df['country'] == 'Libya'].reset_index(drop=True)
-    libya_df = libya_df[['ransom_demand_USD', 'hostage_num', 'hostage_fatalities']]
-    libya_corr = libya_df.corr()
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    fig.suptitle("Correlations between ransom and hostages", fontsize=18)
-    heatmap_labels = ['Demand (USD)', '# abducted', '# killed']
-    sns.heatmap(philippines_corr, linewidths=1, ax=axes[0], square=True, cbar=False, annot=True, cmap="vlag", center=0, xticklabels=heatmap_labels, yticklabels=heatmap_labels)
-    axes[0].set_title("Philppines", fontsize=13)
-    sns.heatmap(syria_corr, linewidths=1, ax=axes[1], square=True, cbar=False, annot=True, cmap="vlag", center=0, xticklabels=heatmap_labels, yticklabels=heatmap_labels)
-    axes[1].set_title("Syria", fontsize=13)
-    sns.heatmap(libya_corr, linewidths=1, ax=axes[2], square=True, cbar=False, annot=True, cmap="vlag", center=0, xticklabels=heatmap_labels, yticklabels=heatmap_labels)
-    axes[2].set_title("Libya", fontsize=13)
-    st.pyplot(fig)
-
-    st.markdown('**Hostage incidents and ransom**')
-    top_ransom_demander_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] == 4) & (hostage_incident_df['year'] > 2007) & (hostage_incident_df['ransom_demand'] == 1)].groupby('attacker')['eventid'].count().sort_values(ascending=False).head(20)
-    top_ransom_demander_non_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] != 4) & (hostage_incident_df['year'] > 2007) & (hostage_incident_df['ransom_demand'] == 1)].groupby('attacker')['eventid'].count().sort_values(ascending=False).head(20)
-    top_ransom_demander = pd.merge(top_ransom_demander_non_fatality, top_ransom_demander_fatality, on='attacker').reset_index().head(5) 
-    top_ransom_demander = top_ransom_demander.rename(columns={'eventid_x':'total_non_fatal','eventid_y':'total_fatal'})
-    top_ransom_demander_nat_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] == 4) & (hostage_incident_df['year'] > 2007) & (hostage_incident_df['ransom_demand'] == 1)].groupby('target_nationality')['eventid'].count().sort_values(ascending=False).head(20)
-    top_ransom_demander_nat_non_fatality = hostage_incident_df.loc[(hostage_incident_df['hostage_outcome'] != 4) & (hostage_incident_df['year'] > 2007) & (hostage_incident_df['ransom_demand'] == 1)].groupby('target_nationality')['eventid'].count().sort_values(ascending=False).head(20)
-    top_ransom_demander_nat = pd.merge(top_ransom_demander_nat_non_fatality, top_ransom_demander_nat_fatality, on='target_nationality').reset_index().head(5)
-    top_ransom_demander_nat = top_ransom_demander_nat.rename(columns={'eventid_x':'total_non_fatal','eventid_y':'total_fatal'})
-    fig, axes = plt.subplots(2, 1, figsize=(15, 10))
-    fig.suptitle("Hostage incidents demanding ransoms (2007 - 2017)", fontsize=18)
-
-    top_ransom_demander.plot(x='attacker', kind='barh', ax=axes[0], stacked=True)
-    axes[0].set_title("Total by hostage taker group", fontsize=15)
-    axes[0].set_xlabel('Incident count')
-    axes[0].set_ylabel('Group')
-    axes[0].legend(['No fatalities', 'One or more fatalities'], fontsize=12)
-
-
-    top_ransom_demander_nat.plot(x='target_nationality', kind='barh', ax=axes[1], stacked=True)
-    axes[1].set_title("Total by hostage nationality", fontsize=15)
-    axes[1].set_xlabel('Incident count')
-    axes[1].set_ylabel('Hostage nationality')
-    axes[1].legend(['No fatalities', 'One or more fatalities'], fontsize=12)
-    st.pyplot(fig)
-
-    st.markdown('**How much ransom money is demanded/paid?**')
-    ransom_demand_USD_df = hostage_incident_df[['eventid', 'year', 'target','month', 'day', 'attacker','hostage_num', 'hostage_hours', 'hostage_days', 'ransom_demand_USD', 'ransom_paid', 'hostage_outcome','hostage_survived_num']]
-    ransom_demand_USD_df = ransom_demand_USD_df[(ransom_demand_USD_df['ransom_demand_USD'] != -99) & (ransom_demand_USD_df['ransom_demand_USD'] > 0)]
-    ransom_paid_USD_df = ransom_demand_USD_df.loc[ransom_demand_USD_df['ransom_paid'] > 0]
-
-    fig, ax = plt.subplots(figsize=(15, 10))
-
-    ransom_demand_USD_df.hist(column='ransom_demand_USD', bins = 20, range=[0,200000], ax=ax)
-    ransom_paid_USD_df.hist(column='ransom_paid', range=[0,200000], bins = 20, ax=ax)
-    ax.set_title('Frequency of ransom demand (USD - up to 200k)', size=15)
-    ax.set_xlabel('Ransom demand (USD)')
-    ax.set_ylabel('Frequency')
-    ax.legend(['Ransom amount demanded', 'Ransom amount paid'], fontsize=12)
-    st.pyplot(fig)
-    st.markdown('Typically, most ransom demands are below USD $75,000.')
-    st.markdown('However, the amount actually paid to the abductees is typically lower and less frequent.')
-    st.markdown('**Does paying less than the requested amount of ransom decrease the chances of a successful release (no hostages killed)?**')
-    ransom_paid_USD_df['hostage_killed_num'] = ransom_paid_USD_df['hostage_num'] - ransom_paid_USD_df['hostage_survived_num']
-    ransom_paid_USD_df['hostage_killed'] = ransom_paid_USD_df['hostage_killed_num'].apply(lambda x: 'One or more fatality' if x > 0 else 'No fatalities')
-    # st.dataframe(ransom_paid_USD_df)
-    st.markdown('In cases where ransom was demanded and paid, most demands were met.')
-    st.markdown('A handful of cases paid under the requested amount, and one case paid more.')
-    st.markdown("There doesn't seem to be a correlation between meeting the reqested amount and a successful outcome: hostages died when demands were met, and when they weren't. ")
-    fig, ax = plt.subplots(figsize=(12, 12))
-    sns.scatterplot(x = 'ransom_demand_USD',
-                    y = 'ransom_paid', 
-                    hue = 'hostage_killed', 
-                    data = ransom_paid_USD_df,
-                    legend="full")
-
-    ax.set_title('Ransom requested vs paid (up to 200k)', size=15)
-    ax.set_xlabel('Ransom demand USD')
-    ax.set_ylabel('Ransom paid USD')
-    ax.set_xlim([0, 200000])
-    ax.set_ylim([0, 200000])
-    ax.set_aspect('equal', 'box')
-    ax.legend(['No fatalities', 'One or more fatalities'], fontsize=12)
-
-    st.pyplot(fig)
-
-    st.markdown("**What happens if you don't pay?**")
-    ransom_not_paid = hostage_incident_df[(hostage_incident_df['ransom_demand_USD'] > 0) & (hostage_incident_df['ransom_paid'] == 0)]
-    ransom_not_paid['hostage_killed_num'] = ransom_not_paid['hostage_num'] - ransom_not_paid['hostage_survived_num']
-    hostages_killed_per_incident_ransom_not_paid_a = ((len(ransom_not_paid[ransom_not_paid['hostage_killed_num'] > 0])) * 100)/len(hostage_incident_df)
-    hostages_killed_per_incident_ransom_not_paid_b = ((len(ransom_not_paid[ransom_not_paid['hostage_killed_num'] > 0])) * 100)/len(ransom_not_paid)
-    st.markdown('There are ***'+'%2.2f'%hostages_killed_per_incident_ransom_not_paid_a+' %*** of the hostages in the total taken hostage incidents were killed even they paid the ransom.')
-    st.markdown('And there are ***' + '%2.2f'%hostages_killed_per_incident_ransom_not_paid_b +'%*** of hostages that were killed in all of paid ransom incidents')
-    hostages_killed_per_incident_ransom_paid_a = ((len(ransom_paid_USD_df[ransom_paid_USD_df['hostage_killed_num'] > 0])) * 100)/len(hostage_incident_df)
-    hostages_killed_per_incident_ransom_paid_b = ((len(ransom_paid_USD_df[ransom_paid_USD_df['hostage_killed_num'] > 0])) * 100)/len(ransom_paid_USD_df)
-    st.markdown('However, there are only ***'+'%2.2f'%hostages_killed_per_incident_ransom_paid_a+'%*** of hostages in total of hostage taken incidents were killed when they ***DID NOT*** pay the ransom.')
-    st.markdown('And, there are only ***'+'%2.2f'%hostages_killed_per_incident_ransom_paid_b+'%*** of hostages that were killed in all of not-paid-ransom incidents')
-    st.markdown('THINK TWICE BEFORE DECIDING PAY RANSOM BECAUSE YOU WILL GET HIGHER CHANGE TO SURVIVED WHEN NOT PAID RANSOM')
 
 
 
