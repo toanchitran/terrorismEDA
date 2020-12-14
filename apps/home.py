@@ -25,6 +25,7 @@ def app():
     st.markdown('COUNTRIES AND REGIONS BELOW ARE NOT INCLUDED IN THIS ACCESSMENT SUMMARY REPORT. PLEASE REFER IT IN THE PAGE "REGION" AND "COUNTRY" IF NEEDED.')
     st.dataframe(notRegion_df)
     working_data = terrorism_df[~terrorism_df['region'].isin(notRegion)]
+    working_data['property_damage_USD'] = working_data['property_damage_USD'].abs()
     if st.checkbox('Include of the regions and countries to the report:', key='all_data'):
         terrorism_df = load_terrorism_data()
         working_data = terrorism_df
@@ -34,7 +35,11 @@ def app():
     st.markdown('## SCOPE OF WORK')
     st.markdown('This accessment report is focused to business operators and insurance companies. In this report, we will focus on those quantity number of loss by terrorism in term of human loss (wounded and fatality number),'+
     ' property/asset loss (number of damaged properties and the damaged value in USD) and after all, the information about the terrorism related to kidnapping/ taking hostage and try to answer the question of how much ransom we need to pay to keep the hostage survive')
-    # Terrorism trend over the world
+    
+    ####################################
+    #     TERRORISM OVER THE WORLD     #
+    ####################################
+
     st.markdown('## TERRORISM OVER THE WORLD')
 
     st.markdown('### NUMBER OF TERRORISM ATTACKS IN THE WORLD SINCE 1970 BY REGIONS')
@@ -226,8 +231,13 @@ def app():
     st.markdown('**TOP 5 SAFEST COUNTRIES IN TERM OF HUMAN LOSS BY TERRORISM SINCE 2014**')
     st.markdown('Countries from table below are safe countries in term of human loss since 2014 even though some countries have many terrorisms incident. ')
     st.dataframe(top5_safe_human_loss_country)
-    
-    # Property damage
+
+
+    #####################################
+    #          PROPERTY DAMAGE          #
+    #####################################
+
+
     st.markdown('## PROPERTY DAMAGE BY TERRORISM')
 
     ## PREPARE DATA
@@ -437,6 +447,50 @@ def app():
     st.markdown('The countries in the table below are safe from the property damaged by terrorism since 2000 to 2017')
     st.dataframe(property_damage_stt3_top1_attack[property_damage_stt3_top1_attack['property_damage_USD'] == 0][['country', 'property_damage_USD']].drop_duplicates())
 
+
+    ##########################################
+    #          WHAT HAPPENS IN 2014          #
+    ##########################################
+    st.markdown('## WHAT HAPPENED IN 2014')
+    terrorism_2014 = working_data[working_data['year'] == 2014]
+    terrorism_2014 = terrorism_2014[terrorism_2014['property_damage'] != -9]
+
+    terrorism_2014_stt = pd.pivot_table(
+        terrorism_2014,
+        values=['eventid', 'property_damage', 'property_damage_USD', 'fatality_num', 'wounded_num'],
+        index=['region', 'country'],
+        aggfunc={'eventid':'count', 'property_damage':sum, 'property_damage_USD':sum, 'fatality_num':sum, 'wounded_num':sum }
+    )
+    terrorism_2014_stt = terrorism_2014_stt.rename(columns={'eventid':'number_of_attacks'})
+    terrorism_2014_stt['total_human_loss'] = terrorism_2014_stt['fatality_num'] + terrorism_2014_stt['wounded_num']
+    terrorism_2014_stt = terrorism_2014_stt[['number_of_attacks', 'total_human_loss', 'fatality_num', 'wounded_num', 'property_damage', 'property_damage_USD']]
+
+    ukraine_df = terrorism_2014[terrorism_2014['country'] == 'Ukraine']
+    ukraine_df['total_human_loss'] = ukraine_df['fatality_num'] + ukraine_df['wounded_num']
+    ukraine_df = ukraine_df[['date', 'province', 'city', 'summary', 'total_human_loss', 'fatality_num', 'wounded_num','attack_type', 'target_type', 'target_subtype', 'target_entity', 'target', 'target_nationality', 'attacker', 'motive', 'weapon_type', 'property_damage_USD']]
+    ukraine_df = ukraine_df.sort_values(['total_human_loss'], ascending=False).head(10)
+
+    philippines_df = terrorism_2014[terrorism_2014['country'] == 'Philippines']
+    philippines_df['total_human_loss'] = philippines_df['fatality_num'] + philippines_df['wounded_num']
+    philippines_df = philippines_df[['date', 'province', 'city', 'summary', 'total_human_loss', 'fatality_num', 'wounded_num','attack_type', 'target_type', 'target_subtype', 'target_entity', 'target', 'target_nationality', 'attacker', 'motive', 'weapon_type', 'property_damage_USD']]
+    philippines_df = philippines_df.sort_values(['total_human_loss'], ascending=False).head(10)
+
+    thailand_df = terrorism_2014[terrorism_2014['country'] == 'Thailand']
+    thailand_df['total_human_loss'] = thailand_df['fatality_num'] + thailand_df['wounded_num']
+    thailand_df = thailand_df[['date', 'province', 'city', 'summary', 'total_human_loss', 'fatality_num', 'wounded_num','attack_type', 'target_type', 'target_subtype', 'target_entity', 'target', 'target_nationality', 'attacker', 'motive', 'weapon_type', 'property_damage_USD']]
+    thailand_df = thailand_df.sort_values(['total_human_loss'], ascending=False).head(10)
+
+    st.dataframe(terrorism_2014_stt)
+    st.markdown('United States is the country that take most damage because of terrorism in property loss in USD (over ***100M USD*** of property damage in USD) even though United States only took 25 terrorism attacks.')
+    st.markdown('Besides United States, Spain also loss over ***1M USD*** of property damage even it took only 4 of terrorism attack, and Germany loss around ***800,000 USD*** with only 10 of terrorism attack.')
+    st.markdown('In term of numbers of terrorism attacks, there are total of ***' + str(terrorism_2014_stt['number_of_attacks'].sum()) + '*** attacks in the world in 2014. And Ukraine (584 attacks), Philippines (530 attacks) and Thailand (369 attacks) are top 3 countries that took most number of attack.'+'And only top 3 countries took ***' + '%.2f'%((584+530+369)*100/(terrorism_2014_stt['number_of_attacks'].sum()))+ '%*** of total number attacks in the world in 2014.')
+    st.markdown('And Ukraine, Philippines and Thailand also took highest number of human loss. The number of human loss in top 3 countries are ***'+ '%.2f'%((1999+929+671)*100/(terrorism_2014_stt['total_human_loss'].sum()))+'%*** of total human loss in 2014 because of terrorism attack.')
+    st.markdown('The table below show the top 10 of attacks that caused most of human loss in Ukraine')
+    st.dataframe(ukraine_df)
+    st.markdown('The table below show the top 10 of attacks that caused most of human loss in Philippines')
+    st.dataframe(philippines_df)
+    st.markdown('The table below show the top 10 of attacks that caused most of human loss in Thailand')
+    st.dataframe(thailand_df)
 
 
 
