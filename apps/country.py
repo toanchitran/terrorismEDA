@@ -264,6 +264,7 @@ def app():
     else:
         st.subheader('TYPE OF ATTACK THAT KILL AND INJURE MOST PEOPLE IN ' + country_option.upper() + ' SINCE 2000')
         attack_type_and_dead_people = pd.pivot_table(working_data, values=['wounded_num', 'fatality_num'], index='attack_type',aggfunc = sum)
+        attack_type_and_dead_people['total_human_loss'] = attack_type_and_dead_people['fatality_num'] + attack_type_and_dead_people['wounded_num']
         a3 = attack_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5).index[0] 
         a4 = attack_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5)['fatality_num'][0] 
         b3 = attack_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5).index[0]
@@ -282,12 +283,16 @@ def app():
     if which_year != 'All years since 2000':
         st.subheader('TARGET GROUPS THAT GOT MOST FATAL AND WOUNDED IN ' + country_option.upper() + ' SINCE ' + which_year.upper() )
         target_type_and_dead_people = pd.pivot_table(working_data, values=['wounded_num', 'fatality_num'], index='target_type',aggfunc = sum)
+        target_type_and_dead_people['total_human_loss']= target_type_and_dead_people['fatality_num'] + target_type_and_dead_people['wounded_num']
         a5 = target_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5).index[0] 
         a6 = target_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5)['fatality_num'][0] 
         b5 = target_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5).index[0]
         b6 = target_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5)['wounded_num'][0]
+        c5 = target_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5).index[0]
+        c6 = target_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5)['total_human_loss'][0]
         st.markdown('***'+a5 + '*** is the top 1 targeted and killed group. They was killed total of ***' + a6.astype(str) + '*** people since ' + which_year)
         st.markdown('***'+b5 + '*** is the top 1 targeted and got wound group. They got total of ***' + b6.astype(str) + '*** wounded people since ' + which_year) 
+        st.markdown('***'+c5 + '*** is the top 1 targeted group. They got total of ***' + c6.astype(str)  + '*** loss people since '+which_year)
         st.dataframe(target_type_and_dead_people)
         
         if st.checkbox('Show chart', key='target_type_and_dead_wounded1'):
@@ -297,17 +302,23 @@ def app():
     else:
         st.subheader('TARGET GROUPS THAT GOT MOST FATAL AND WOUNDED IN ' + country_option.upper() + ' SINCE 2000')
         target_type_and_dead_people = pd.pivot_table(working_data, values=['wounded_num', 'fatality_num'], index='target_type',aggfunc = sum)
+        target_type_and_dead_people['total_human_loss']= target_type_and_dead_people['fatality_num'] + target_type_and_dead_people['wounded_num']
         a5 = target_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5).index[0] 
         a6 = target_type_and_dead_people.sort_values(['fatality_num'], ascending=False).head(5)['fatality_num'][0] 
         b5 = target_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5).index[0]
         b6 = target_type_and_dead_people.sort_values(['wounded_num'], ascending=False).head(5)['wounded_num'][0]
+        c5 = target_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5).index[0]
+        c6 = target_type_and_dead_people.sort_values(['total_human_loss'], ascending=False).head(5)['total_human_loss'][0]
         st.markdown('***'+a5 + '*** is the top 1 targeted and killed group. They was killed total of ***' + a6.astype(str) + '*** people since 2000')
         st.markdown('***'+b5 + '*** is the top 1 targeted and got wound group. They got total of ***' + b6.astype(str)  + '*** wounded people since 2000') 
-        st.dataframe(attacker_and_dead_people)
+        st.markdown('***'+c5 + '*** is the top 1 targeted group. They got total of ***' + c6.astype(str)  + '*** loss people since 2000') 
+        st.dataframe(target_type_and_dead_people)
         if st.checkbox('Show chart', key='target_type_and_dead_wounded2'):
             fig,ax = plt.subplots()
             target_type_and_dead_people.sort_values(['wounded_num', 'fatality_num'], ascending=False).head(5).plot(ax=ax, kind='barh')
             st.pyplot(fig)
+
+    
 
 
     
